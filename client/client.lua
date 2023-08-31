@@ -8,7 +8,7 @@ Citizen.CreateThread(function()
             local distance = #(playerCoords - v.coords.xyz)
 
             if distance < Config.DistanceSpawn and not spawnedPeds[k] then
-                local spawnedPed = NearPed(v.model, v.coords)
+                local spawnedPed = NearPed(v.model, v.coords, v.animation)
                 spawnedPeds[k] = { spawnedPed = spawnedPed }
             end
             
@@ -26,12 +26,15 @@ Citizen.CreateThread(function()
     end
 end)
 
-function NearPed(model, coords)
+function NearPed(model, coords, anim)
     RequestModel(model)
     while not HasModelLoaded(model) do
         Citizen.Wait(50)
     end
     spawnedPed = CreatePed(model, coords.x, coords.y, coords.z - 1.0, coords.w, false, false, 0, 0)
+	if anim and IsAnimationValid(anim) then
+        TaskStartScenarioInPlace(spawnedPed, anim, -1, true, false, false, false)
+    end
     SetEntityAlpha(spawnedPed, 0, false)
     Citizen.InvokeNative(0x283978A15512B2FE, spawnedPed, true)
     SetEntityCanBeDamaged(spawnedPed, false)
@@ -53,4 +56,11 @@ function NearPed(model, coords)
         end
     end
     return spawnedPed
+end
+
+function IsAnimationValid(animation)
+    if not animation then
+        return false
+    end
+    return IsScenarioTypeEnabled(animation, 0)
 end
